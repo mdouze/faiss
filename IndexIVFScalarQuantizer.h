@@ -3,6 +3,8 @@
 #ifndef FAISS_INDEX_IVF_SCALAR_QUANTIZER_H
 #define FAISS_INDEX_IVF_SCALAR_QUANTIZER_H
 
+#include <stdint.h>
+
 
 #include <vector>
 

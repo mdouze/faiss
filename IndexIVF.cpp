@@ -14,6 +14,7 @@
 #include "IndexIVF.h"
 
 #include <cstdio>
+#include <omp.h>
 
 #include "utils.h"
 #include "hamming.h"
@@ -665,5 +666,9 @@ void IndexIVFFlatIPBounds::search (
     delete [] qnorms;
     delete [] idx;
 }
+
+
+
+
 
 } // namespace faiss

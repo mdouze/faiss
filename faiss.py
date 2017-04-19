@@ -132,6 +132,13 @@ def handle_VectorTransform(the_class):
         self.apply_noalloc(n, swig_ptr(x), swig_ptr(y))
         return y
 
+    def replacement_reverse_transform(self, x):
+        n, d = x.shape
+        assert d == self.d_out
+        y = np.empty((n, self.d_in), dtype=np.float32)
+        self.reverse_transform_c(n, swig_ptr(x), swig_ptr(y))
+        return y
+
     def replacement_vt_train(self, x):
         assert x.flags.contiguous
         n, d = x.shape
@@ -141,6 +148,8 @@ def handle_VectorTransform(the_class):
     replace_method(the_class, 'train', replacement_vt_train)
     # apply is reserved in Pyton...
     the_class.apply_py = apply_method
+    replace_method(the_class, 'reverse_transform',
+                   replacement_reverse_transform)
 
 
 def handle_AutoTuneCriterion(the_class):

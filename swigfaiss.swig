@@ -75,6 +75,7 @@ extern "C" {
 #include "IndexPQ.h"
 #include "IndexIVF.h"
 #include "IndexIVFPQ.h"
+#include "IndexIVFScalarQuantizer.h"
 
 #include "MetaIndexes.h"
 
@@ -214,6 +215,7 @@ int get_num_gpus()
 %include "PolysemousTraining.h"
 %include "IndexPQ.h"
 %include "IndexIVF.h"
+%include "IndexIVFScalarQuantizer.h"
 
 %ignore faiss::IndexIVFPQ::alloc_type;
 %include "IndexIVFPQ.h"

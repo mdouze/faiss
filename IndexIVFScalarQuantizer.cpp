@@ -31,12 +31,12 @@ IndexIVFScalarQuantizer::IndexIVFScalarQuantizer
         code_size = (d + 1) / 2;
         break;
     }
-    codes.resize(nlist); 
+    codes.resize(nlist);
 }
 
 namespace {
 
-typedef Index::idx_t idx_t; 
+typedef Index::idx_t idx_t;
 typedef IndexIVFScalarQuantizer::QuantizerType QuantizerType;
 
 
@@ -56,8 +56,8 @@ struct Codec8bit {
 
     static __m256 decode_8_components (const uint8_t *code, int i) {
         uint64_t c8 = *(uint64_t*)(code + i);
-        __m128i c8i = _mm_set_epi64x (0, c8); 
-        __m256i i8 = _mm256_cvtepu8_epi32 (c8i); 
+        __m128i c8i = _mm_set_epi64x (0, c8);
+        __m256i i8 = _mm256_cvtepu8_epi32 (c8i);
         __m256 f8 = _mm256_cvtepi32_ps (i8);
         __m256 half = _mm256_set1_ps (0.5f);
         f8 += half;
@@ -72,7 +72,7 @@ struct Codec4bit {
     static void encode_component (float x, uint8_t *code, int i) {
         code [i / 2] |= (int)(x * 15.0) << ((i & 1) << 2);
     }
-    
+
     static float decode_component (const uint8_t *code, int i) {
         return (((code[i / 2] >> ((i & 1) << 2)) & 0xf) + 0.5f) / 15.0f;
     }
@@ -86,19 +86,19 @@ struct Codec4bit {
  */
 
 struct SimilarityL2 {
-    const float *y, *yi; 
-    float accu; 
-    
+    const float *y, *yi;
+    float accu;
+
     SimilarityL2 (const float * y): y(y) {}
-    
+
     void begin () {
-        accu = 0; 
-        yi = y; 
+        accu = 0;
+        yi = y;
     }
 
     void add_component (float x) {
-        float tmp = *yi++ - x; 
-        accu += tmp * tmp; 
+        float tmp = *yi++ - x;
+        accu += tmp * tmp;
     }
 
     float result () {
@@ -108,20 +108,20 @@ struct SimilarityL2 {
 };
 
 struct SimilarityIP {
-    const float *y, *yi; 
+    const float *y, *yi;
     const float accu0;
-    float accu; 
-    
-    SimilarityIP (const float * y, float accu0): 
+    float accu;
+
+    SimilarityIP (const float * y, float accu0):
         y (y), accu0 (accu0) {}
-    
+
     void begin () {
-        accu = accu0; 
-        yi = y; 
+        accu = accu0;
+        yi = y;
     }
 
     void add_component (float x) {
-        accu +=  *yi++ * x; 
+        accu +=  *yi++ * x;
     }
 
     float result () {
@@ -132,14 +132,14 @@ struct SimilarityIP {
 
 
 template<class Quantizer, class Similarity>
-float compute_distance(const Quantizer & quant, Similarity & sim, const uint8_t *code) 
+float compute_distance(const Quantizer & quant, Similarity & sim, const uint8_t *code)
 {
-    sim.begin(); 
+    sim.begin();
     for (size_t i = 0; i < quant.d; i++) {
-        float xi = quant.reconstruct_component (code, i); 
-        sim.add_component (xi); 
+        float xi = quant.reconstruct_component (code, i);
+        sim.add_component (xi);
     }
-    return sim.result();     
+    return sim.result();
 }
 
 
@@ -151,18 +151,18 @@ float compute_distance(const Quantizer & quant, Similarity & sim, const uint8_t 
 
 
 struct ScalarQuantizer {
-    virtual void encode_vector(const float *x, uint8_t *code) const = 0; 
-    virtual void decode_vector(const uint8_t *code, float *x) const = 0;    
+    virtual void encode_vector(const float *x, uint8_t *code) const = 0;
+    virtual void decode_vector(const uint8_t *code, float *x) const = 0;
 
     virtual float compute_distance_L2 (SimilarityL2 &sim, const uint8_t * codes) const = 0;
-    virtual float compute_distance_IP (SimilarityIP &sim, const uint8_t * codes) const = 0; 
-    
+    virtual float compute_distance_IP (SimilarityIP &sim, const uint8_t * codes) const = 0;
+
     virtual ~ScalarQuantizer() {}
 };
 
 
 
-void train_Uniform(idx_t n, int d, const float *x, std::vector<float> & trained) 
+void train_Uniform(idx_t n, int d, const float *x, std::vector<float> & trained)
 {
     trained.resize (2);
     float & vmin = trained[0];
@@ -178,12 +178,12 @@ void train_Uniform(idx_t n, int d, const float *x, std::vector<float> & trained)
 template<class Codec>
 struct QuantizerUniform: ScalarQuantizer {
     const size_t d;
-    const float vmin, vmax; 
-    QuantizerUniform(size_t d, const std::vector<float> &trained): 
+    const float vmin, vmax;
+    QuantizerUniform(size_t d, const std::vector<float> &trained):
         d(d), vmin(trained[0]), vmax(trained[1]) {}
 
-    
-    virtual void encode_vector(const float *x, uint8_t *code) const 
+
+    virtual void encode_vector(const float *x, uint8_t *code) const
     {
         for (size_t i = 0; i < d; i++) {
             float xi = (x[i] - vmin) / (vmax - vmin);
@@ -192,16 +192,16 @@ struct QuantizerUniform: ScalarQuantizer {
             Codec::encode_component (xi, code, i);
         }
     }
-    
+
     virtual void decode_vector(const uint8_t *code, float *x) const
     {
         for (size_t i = 0; i < d; i++) {
             float xi = Codec::decode_component (code, i);
             x[i] = vmin + xi * (vmax - vmin);
-        }        
+        }
     }
-    
-    float reconstruct_component (const uint8_t * code, int i) const 
+
+    float reconstruct_component (const uint8_t * code, int i) const
     {
         float xi = Codec::decode_component (code, i);
         return vmin + xi * (vmax - vmin);
@@ -215,7 +215,7 @@ struct QuantizerUniform: ScalarQuantizer {
 };
 
 
-void train_NonUniform(idx_t n, int d, const float *x, std::vector<float> & trained) 
+void train_NonUniform(idx_t n, int d, const float *x, std::vector<float> & trained)
 {
     trained.resize (2 * d);
     float * vmin = trained.data();
@@ -237,11 +237,11 @@ struct QuantizerNonUniform: ScalarQuantizer {
     const size_t d;
     const float *vmin, *vmax;
 
-    QuantizerNonUniform(size_t d, const std::vector<float> &trained): 
+    QuantizerNonUniform(size_t d, const std::vector<float> &trained):
         d(d), vmin(trained.data()), vmax(trained.data() + d) {}
-         
-    virtual void encode_vector(const float *x, uint8_t *code) const 
-    { 
+
+    virtual void encode_vector(const float *x, uint8_t *code) const
+    {
         for (size_t i = 0; i < d; i++) {
             float xi = (x[i] - vmin[i]) / (vmax[i] - vmin[i]);
             if (xi < 0) xi = 0;
@@ -249,16 +249,16 @@ struct QuantizerNonUniform: ScalarQuantizer {
             Codec::encode_component (xi, code, i);
         }
     }
-    
+
     virtual void decode_vector(const uint8_t *code, float *x) const
     {
         for (size_t i = 0; i < d; i++) {
             float xi = Codec::decode_component (code, i);
             x[i] = vmin[i] + xi * (vmax[i] - vmin[i]);
-        }        
+        }
     }
-    
-    float reconstruct_component (const uint8_t * code, int i) const 
+
+    float reconstruct_component (const uint8_t * code, int i) const
     {
         float xi = Codec::decode_component (code, i);
         return vmin[i] + xi * (vmax[i] - vmin[i]);
@@ -276,21 +276,21 @@ struct QuantizerNonUniform: ScalarQuantizer {
 
 
 ScalarQuantizer *select_quantizer(
-       IndexIVFScalarQuantizer::QuantizerType qtype, 
-       size_t d, const std::vector<float> & trained) 
+       IndexIVFScalarQuantizer::QuantizerType qtype,
+       size_t d, const std::vector<float> & trained)
 {
     switch(qtype) {
-    case IndexIVFScalarQuantizer::QT_8bit: 
-        
-        return new QuantizerNonUniform<Codec8bit>(d, trained); 
-    case IndexIVFScalarQuantizer::QT_4bit: 
-        return new QuantizerNonUniform<Codec4bit>(d, trained); 
-    case IndexIVFScalarQuantizer::QT_8bit_uniform: 
-        return new QuantizerUniform<Codec8bit>(d, trained); 
-    case IndexIVFScalarQuantizer::QT_4bit_uniform: 
-        return new QuantizerUniform<Codec4bit>(d, trained); 
+    case IndexIVFScalarQuantizer::QT_8bit:
+
+        return new QuantizerNonUniform<Codec8bit>(d, trained);
+    case IndexIVFScalarQuantizer::QT_4bit:
+        return new QuantizerNonUniform<Codec4bit>(d, trained);
+    case IndexIVFScalarQuantizer::QT_8bit_uniform:
+        return new QuantizerUniform<Codec8bit>(d, trained);
+    case IndexIVFScalarQuantizer::QT_4bit_uniform:
+        return new QuantizerUniform<Codec4bit>(d, trained);
     }
-    FAISS_ASSERT(!"should not happen"); 
+    FAISS_ASSERT(!"should not happen");
     return nullptr;
 }
 
@@ -306,20 +306,20 @@ void IndexIVFScalarQuantizer::train_residual (idx_t n, const float *x)
 {
     long * idx = new long [n];
     quantizer->assign (n, x, idx);
-    float *residuals = new float [n * d]; 
+    float *residuals = new float [n * d];
 #pragma omp parallel for
-    for (idx_t i = 0; i < n; i++) 
-        quantizer->compute_residual (x + i * d, residuals + i * d, idx[i]); 
+    for (idx_t i = 0; i < n; i++)
+        quantizer->compute_residual (x + i * d, residuals + i * d, idx[i]);
 
     switch (qtype) {
     case QT_4bit_uniform: case QT_8bit_uniform:
-        train_Uniform (n, d, residuals, trained); 
+        train_Uniform (n, d, residuals, trained);
         break;
     case QT_4bit: case QT_8bit:
-        train_NonUniform (n, d, residuals, trained); 
+        train_NonUniform (n, d, residuals, trained);
         break;
     }
-    
+
     delete idx;
     delete residuals;
 }
@@ -332,8 +332,8 @@ void IndexIVFScalarQuantizer::add_with_ids
     long * idx = new long [n];
     quantizer->assign (n, x, idx);
     size_t nadd = 0;
-    ScalarQuantizer *squant = select_quantizer(qtype, d, trained); 
-    
+    ScalarQuantizer *squant = select_quantizer(qtype, d, trained);
+
 #pragma omp parallel reduction(+: nadd)
     {
         std::vector<float> residual (d);
@@ -355,7 +355,7 @@ void IndexIVFScalarQuantizer::add_with_ids
                 size_t cur_size = codes[list_no].size();
                 codes[list_no].resize (cur_size + code_size);
 
-                squant->encode_vector (residual.data(), 
+                squant->encode_vector (residual.data(),
                                        codes[list_no].data() + cur_size);
             }
         }
@@ -367,30 +367,30 @@ void IndexIVFScalarQuantizer::add_with_ids
 
 
 void search_with_probes_ip (const IndexIVFScalarQuantizer & index,
-                            const float *x, 
-                            const idx_t *cent_ids, const float *cent_dis, 
-                            const ScalarQuantizer & quant, 
-                            int k, float *simi, idx_t *idxi) 
+                            const float *x,
+                            const idx_t *cent_ids, const float *cent_dis,
+                            const ScalarQuantizer & quant,
+                            int k, float *simi, idx_t *idxi)
 {
     int nprobe = index.nprobe;
-    size_t code_size = index.code_size; 
+    size_t code_size = index.code_size;
     size_t d = index.d;
-    std::vector<float> decoded(d); 
+    std::vector<float> decoded(d);
     minheap_heapify (k, simi, idxi);
     for (int i = 0; i < nprobe; i++) {
         idx_t list_no = cent_ids[i];
         if (list_no < 0) break;
-        float accu0 = cent_dis[i]; 
-        
+        float accu0 = cent_dis[i];
+
         const std::vector<idx_t> & ids = index.ids[list_no];
         const uint8_t* codes = index.codes[list_no].data();
 
         SimilarityIP sim(x, accu0);
 
         for (size_t j = 0; j < ids.size(); j++) {
-            
-            float accu = quant.compute_distance_IP(sim, codes); 
-            
+
+            float accu = quant.compute_distance_IP(sim, codes);
+
             if (accu > simi [0]) {
                 minheap_pop (k, simi, idxi);
                 minheap_push (k, simi, idxi, accu, ids[j]);
@@ -403,33 +403,33 @@ void search_with_probes_ip (const IndexIVFScalarQuantizer & index,
 }
 
 void search_with_probes_L2 (const IndexIVFScalarQuantizer & index,
-                            const float *x_in, 
-                            const idx_t *cent_ids, 
-                            const Index *quantizer, 
-                            const ScalarQuantizer & quant, 
-                            int k, float *simi, idx_t *idxi) 
+                            const float *x_in,
+                            const idx_t *cent_ids,
+                            const Index *quantizer,
+                            const ScalarQuantizer & quant,
+                            int k, float *simi, idx_t *idxi)
 {
     int nprobe = index.nprobe;
-    size_t code_size = index.code_size; 
+    size_t code_size = index.code_size;
     size_t d = index.d;
-    std::vector<float> decoded(d), x(d); 
+    std::vector<float> decoded(d), x(d);
     maxheap_heapify (k, simi, idxi);
     for (int i = 0; i < nprobe; i++) {
         idx_t list_no = cent_ids[i];
         if (list_no < 0) break;
-        
+
         const std::vector<idx_t> & ids = index.ids[list_no];
         const uint8_t* codes = index.codes[list_no].data();
-        
+
         // shift of x_in wrt centroid
         quantizer->compute_residual (x_in, x.data(), list_no);
 
-        SimilarityL2 sim(x.data()); 
+        SimilarityL2 sim(x.data());
 
         for (size_t j = 0; j < ids.size(); j++) {
 
             float dis = quant.compute_distance_L2 (sim, codes);
-                        
+
             if (dis < simi [0]) {
                 maxheap_pop (k, simi, idxi);
                 maxheap_push (k, simi, idxi, dis, ids[j]);
@@ -446,7 +446,7 @@ void IndexIVFScalarQuantizer::search (idx_t n, const float *x, idx_t k,
 {
     FAISS_ASSERT (is_trained);
     idx_t * idx = new idx_t [n * nprobe];
-    float *dis = new float [n * nprobe]; 
+    float *dis = new float [n * nprobe];
     quantizer->search (n, x, nprobe, dis, idx);
 
     ScalarQuantizer *squant = select_quantizer(qtype, d, trained);
@@ -454,17 +454,17 @@ void IndexIVFScalarQuantizer::search (idx_t n, const float *x, idx_t k,
     if (metric_type == METRIC_INNER_PRODUCT) {
 #pragma omp parallel for
         for (size_t i = 0; i < n; i++) {
-            search_with_probes_ip (*this, x + i * d, 
-                                   idx + i * nprobe, dis + i * nprobe, *squant, 
+            search_with_probes_ip (*this, x + i * d,
+                                   idx + i * nprobe, dis + i * nprobe, *squant,
                                    k, distances + i * k, labels + i * k);
-        }        
+        }
     } else {
 #pragma omp parallel for
         for (size_t i = 0; i < n; i++) {
             search_with_probes_L2 (*this, x + i * d,
-                                   idx + i * nprobe, quantizer, *squant, 
+                                   idx + i * nprobe, quantizer, *squant,
                                    k, distances + i * k, labels + i * k);
-        }               
+        }
     }
 
     delete squant;
@@ -473,11 +473,11 @@ void IndexIVFScalarQuantizer::search (idx_t n, const float *x, idx_t k,
 }
 
 void IndexIVFScalarQuantizer::set_typename() {
-    FAISS_ASSERT(!"not implemented"); 
+    FAISS_ASSERT(!"not implemented");
 }
 
 void IndexIVFScalarQuantizer::merge_from_residuals (IndexIVF &other) {
-    FAISS_ASSERT(!"not implemented");         
+    FAISS_ASSERT(!"not implemented");
 }
 
 

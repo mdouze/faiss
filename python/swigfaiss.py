@@ -1731,6 +1731,44 @@ class IndexIVFFlatIPBounds(IndexIVFFlat):
 IndexIVFFlatIPBounds_swigregister = _swigfaiss.IndexIVFFlatIPBounds_swigregister
 IndexIVFFlatIPBounds_swigregister(IndexIVFFlatIPBounds)
 
+class IndexIVFScalarQuantizer(IndexIVF):
+    __swig_setmethods__ = {}
+    for _s in [IndexIVF]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, IndexIVFScalarQuantizer, name, value)
+    __swig_getmethods__ = {}
+    for _s in [IndexIVF]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, IndexIVFScalarQuantizer, name)
+    __repr__ = _swig_repr
+    QT_8bit = _swigfaiss.IndexIVFScalarQuantizer_QT_8bit
+    QT_4bit = _swigfaiss.IndexIVFScalarQuantizer_QT_4bit
+    QT_8bit_uniform = _swigfaiss.IndexIVFScalarQuantizer_QT_8bit_uniform
+    QT_4bit_uniform = _swigfaiss.IndexIVFScalarQuantizer_QT_4bit_uniform
+    __swig_setmethods__["qtype"] = _swigfaiss.IndexIVFScalarQuantizer_qtype_set
+    __swig_getmethods__["qtype"] = _swigfaiss.IndexIVFScalarQuantizer_qtype_get
+    if _newclass:qtype = _swig_property(_swigfaiss.IndexIVFScalarQuantizer_qtype_get, _swigfaiss.IndexIVFScalarQuantizer_qtype_set)
+    __swig_setmethods__["code_size"] = _swigfaiss.IndexIVFScalarQuantizer_code_size_set
+    __swig_getmethods__["code_size"] = _swigfaiss.IndexIVFScalarQuantizer_code_size_get
+    if _newclass:code_size = _swig_property(_swigfaiss.IndexIVFScalarQuantizer_code_size_get, _swigfaiss.IndexIVFScalarQuantizer_code_size_set)
+    __swig_setmethods__["trained"] = _swigfaiss.IndexIVFScalarQuantizer_trained_set
+    __swig_getmethods__["trained"] = _swigfaiss.IndexIVFScalarQuantizer_trained_get
+    if _newclass:trained = _swig_property(_swigfaiss.IndexIVFScalarQuantizer_trained_get, _swigfaiss.IndexIVFScalarQuantizer_trained_set)
+    __swig_setmethods__["codes"] = _swigfaiss.IndexIVFScalarQuantizer_codes_set
+    __swig_getmethods__["codes"] = _swigfaiss.IndexIVFScalarQuantizer_codes_get
+    if _newclass:codes = _swig_property(_swigfaiss.IndexIVFScalarQuantizer_codes_get, _swigfaiss.IndexIVFScalarQuantizer_codes_set)
+    def __init__(self, *args): 
+        this = _swigfaiss.new_IndexIVFScalarQuantizer(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def train_residual(self, *args): return _swigfaiss.IndexIVFScalarQuantizer_train_residual(self, *args)
+    def add_with_ids(self, *args): return _swigfaiss.IndexIVFScalarQuantizer_add_with_ids(self, *args)
+    def search(self, *args): return _swigfaiss.IndexIVFScalarQuantizer_search(self, *args)
+    def set_typename(self): return _swigfaiss.IndexIVFScalarQuantizer_set_typename(self)
+    def merge_from_residuals(self, *args): return _swigfaiss.IndexIVFScalarQuantizer_merge_from_residuals(self, *args)
+    __swig_destroy__ = _swigfaiss.delete_IndexIVFScalarQuantizer
+    __del__ = lambda self : None;
+IndexIVFScalarQuantizer_swigregister = _swigfaiss.IndexIVFScalarQuantizer_swigregister
+IndexIVFScalarQuantizer_swigregister(IndexIVFScalarQuantizer)
+
 class IndexIVFPQ(IndexIVF):
     __swig_setmethods__ = {}
     for _s in [IndexIVF]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
