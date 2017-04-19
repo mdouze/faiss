@@ -29305,6 +29305,22 @@ SWIGINTERN PyObject *IndexIVFScalarQuantizer_swigregister(PyObject *SWIGUNUSEDPA
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_test_avx(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  
+  if (!PyArg_ParseTuple(args,(char *)":test_avx")) SWIG_fail;
+  {
+    Py_BEGIN_ALLOW_THREADS
+    faiss::test_avx();
+    Py_END_ALLOW_THREADS
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_IndexIVFPQ_by_residual_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   faiss::IndexIVFPQ *arg1 = (faiss::IndexIVFPQ *) 0 ;
@@ -46923,6 +46939,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"IndexIVFScalarQuantizer_merge_from_residuals", _wrap_IndexIVFScalarQuantizer_merge_from_residuals, METH_VARARGS, NULL},
 	 { (char *)"delete_IndexIVFScalarQuantizer", _wrap_delete_IndexIVFScalarQuantizer, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFScalarQuantizer_swigregister", IndexIVFScalarQuantizer_swigregister, METH_VARARGS, NULL},
+	 { (char *)"test_avx", _wrap_test_avx, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFPQ_by_residual_set", _wrap_IndexIVFPQ_by_residual_set, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFPQ_by_residual_get", _wrap_IndexIVFPQ_by_residual_get, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFPQ_use_precomputed_table_set", _wrap_IndexIVFPQ_use_precomputed_table_set, METH_VARARGS, NULL},

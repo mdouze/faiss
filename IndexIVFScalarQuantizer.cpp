@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <omp.h>
 
-#include "immintrin.h"
+#include <immintrin.h>
 
 #include "utils.h"
 
@@ -56,8 +56,11 @@ struct Codec8bit {
 
     static __m256 decode_8_components (const uint8_t *code, int i) {
         uint64_t c8 = *(uint64_t*)(code + i);
-        __m128i c8i = _mm_set_epi64x (0, c8);
-        __m256i i8 = _mm256_cvtepu8_epi32 (c8i);
+        __m128i c4lo = _mm_cvtepu8_epi32 (_mm_set1_epi32(c8));
+        __m128i c4hi = _mm_cvtepu8_epi32 (_mm_set1_epi32(c8 >> 32));
+        // __m256i i8 = _mm256_set_m128i(c4lo, c4hi);
+        __m256i i8 = _mm256_castsi128_si256 (c4lo);
+        i8 = _mm256_insertf128_si256 (i8, c4hi, 1);
         __m256 f8 = _mm256_cvtepi32_ps (i8);
         __m256 half = _mm256_set1_ps (0.5f);
         f8 += half;
@@ -66,6 +69,7 @@ struct Codec8bit {
     }
 
 };
+
 
 struct Codec4bit {
 
@@ -480,6 +484,15 @@ void IndexIVFScalarQuantizer::merge_from_residuals (IndexIVF &other) {
     FAISS_ASSERT(!"not implemented");
 }
 
+    void test_avx () {
+        uint8_t code[8] = {12, 13, 14, 15, 16, 17, 18, 19};
+        __m256 vec = Codec8bit::decode_8_components(code, 0);
+        float vf[8];
+        _mm256_storeu_ps(vf, vec);
+        printf("vec=[");
+        for(int i= 0; i < 8; i++) printf("%g ", vf[i] * 255);
+        printf("]\n");
+    }
 
 
 }

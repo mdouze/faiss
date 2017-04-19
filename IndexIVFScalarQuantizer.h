@@ -52,7 +52,7 @@ struct IndexIVFScalarQuantizer:IndexIVF {
 
 
 
-
+ void test_avx ();
 }
 
 

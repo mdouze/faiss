@@ -1769,6 +1769,10 @@ class IndexIVFScalarQuantizer(IndexIVF):
 IndexIVFScalarQuantizer_swigregister = _swigfaiss.IndexIVFScalarQuantizer_swigregister
 IndexIVFScalarQuantizer_swigregister(IndexIVFScalarQuantizer)
 
+
+def test_avx():
+  return _swigfaiss.test_avx()
+test_avx = _swigfaiss.test_avx
 class IndexIVFPQ(IndexIVF):
     __swig_setmethods__ = {}
     for _s in [IndexIVF]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
