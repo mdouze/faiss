@@ -244,23 +244,24 @@ void train_Uniform(idx_t n, int d, const float *x, std::vector<float> & trained)
         if (x[i] < vmin) vmin = x[i];
         if (x[i] > vmax) vmax = x[i];
     }
+    vmax -= vmin;
 }
 
 
 template<class Codec>
 struct QuantizerUniform: ScalarQuantizer {
     const size_t d;
-    const float vmin, vmax, vdiff;
+    const float vmin, vdiff;
 
     QuantizerUniform(size_t d, const std::vector<float> &trained):
-        d(d), vmin(trained[0]), vmax(trained[1]), vdiff(vmax - vmin) {
+        d(d), vmin(trained[0]), vdiff(trained[1]) {
     }
 
 
     virtual void encode_vector(const float *x, uint8_t *code) const
     {
         for (size_t i = 0; i < d; i++) {
-            float xi = (x[i] - vmin) / (vmax - vmin);
+            float xi = (x[i] - vmin) / vdiff;
             if (xi < 0) xi = 0;
             if (xi > 1.0) xi = 1.0;
             Codec::encode_component (xi, code, i);
@@ -271,7 +272,7 @@ struct QuantizerUniform: ScalarQuantizer {
     {
         for (size_t i = 0; i < d; i++) {
             float xi = Codec::decode_component (code, i);
-            x[i] = vmin + xi * (vmax - vmin);
+            x[i] = vmin + xi * vdiff;
         }
     }
 
@@ -326,21 +327,25 @@ void train_NonUniform(idx_t n, int d, const float *x, std::vector<float> & train
                 if (xi[j] > vmax[j]) vmax[j] = xi[j];
             }
     }
+    float *vdiff = vmax;
+    for (size_t j = 0; j < d; j++) {
+        vdiff [j] = vmax[j] - vmin[j];
+    }
 }
 
 
 template<class Codec>
 struct QuantizerNonUniform: ScalarQuantizer {
     const size_t d;
-    const float *vmin, *vmax;
+    const float *vmin, *vdiff;
 
     QuantizerNonUniform(size_t d, const std::vector<float> &trained):
-        d(d), vmin(trained.data()), vmax(trained.data() + d) {}
+        d(d), vmin(trained.data()), vdiff(trained.data() + d) {}
 
     virtual void encode_vector(const float *x, uint8_t *code) const
     {
         for (size_t i = 0; i < d; i++) {
-            float xi = (x[i] - vmin[i]) / (vmax[i] - vmin[i]);
+            float xi = (x[i] - vmin[i]) / vdiff[i];
             if (xi < 0) xi = 0;
             if (xi > 1.0) xi = 1.0;
             Codec::encode_component (xi, code, i);
@@ -351,14 +356,14 @@ struct QuantizerNonUniform: ScalarQuantizer {
     {
         for (size_t i = 0; i < d; i++) {
             float xi = Codec::decode_component (code, i);
-            x[i] = vmin[i] + xi * (vmax[i] - vmin[i]);
+            x[i] = vmin[i] + xi * vdiff[i];
         }
     }
 
     float reconstruct_component (const uint8_t * code, int i) const
     {
         float xi = Codec::decode_component (code, i);
-        return vmin[i] + xi * (vmax[i] - vmin[i]);
+        return vmin[i] + xi * vdiff[i];
     }
 
     virtual float compute_distance_L2 (SimilarityL2 &sim, const uint8_t * codes) const
