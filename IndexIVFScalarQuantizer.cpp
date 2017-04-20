@@ -91,10 +91,12 @@ struct Codec4bit {
 
 struct SimilarityL2 {
     const float *y, *yi;
+    SimilarityL2 (const float * y): y(y) {}
+
+
+    /******* scalar accumulator *******/
 
     float accu;
-
-    SimilarityL2 (const float * y): y(y) {}
 
     void begin () {
         accu = 0;
@@ -110,6 +112,7 @@ struct SimilarityL2 {
         return accu;
     }
 
+    /******* AVX accumulator *******/
 
     __m256 accu8;
 
@@ -141,6 +144,9 @@ struct SimilarityL2 {
 struct SimilarityIP {
     const float *y, *yi;
     const float accu0;
+
+    /******* scalar accumulator *******/
+
     float accu;
 
     SimilarityIP (const float * y, float accu0):
@@ -159,6 +165,30 @@ struct SimilarityIP {
         return accu;
     }
 
+    /******* AVX accumulator *******/
+
+    __m256 accu8;
+
+    void begin_8 () {
+        accu8 = _mm256_setzero_ps();
+        yi = y;
+    }
+
+    void add_8_components (__m256 x) {
+        __m256 yiv = _mm256_loadu_ps (yi);
+        yi += 8;
+        accu8 += yiv * x;
+    }
+
+    float result_8 () {
+        __m256 sum = _mm256_hadd_ps(accu8, accu8);
+        __m256 sum2 = _mm256_hadd_ps(sum, sum);
+        // now add the 0th and 4th component
+        return
+            accu0 +
+            _mm_cvtss_f32 (_mm256_castps256_ps128(sum2)) +
+            _mm_cvtss_f32 (_mm256_extractf128_ps(sum2, 1));
+    }
 };
 
 
@@ -274,6 +304,9 @@ struct QuantizerUniform8: QuantizerUniform<Codec> {
     virtual float compute_distance_L2 (SimilarityL2 &sim, const uint8_t * codes) const
     { return compute_distance_8(*this, sim, codes); }
 
+    virtual float compute_distance_IP (SimilarityIP &sim, const uint8_t * codes) const
+    { return compute_distance_8(*this, sim, codes); }
+
 };
 
 
@@ -348,7 +381,10 @@ ScalarQuantizer *select_quantizer(
     case IndexIVFScalarQuantizer::QT_4bit:
         return new QuantizerNonUniform<Codec4bit>(d, trained);
     case IndexIVFScalarQuantizer::QT_8bit_uniform:
-        return new QuantizerUniform<Codec8bit>(d, trained);
+        if (d % 8 == 0)
+            return new QuantizerUniform8<Codec8bit>(d, trained);
+        else
+            return new QuantizerUniform<Codec8bit>(d, trained);
     case IndexIVFScalarQuantizer::QT_4bit_uniform:
         return new QuantizerUniform<Codec4bit>(d, trained);
     }
