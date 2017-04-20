@@ -257,7 +257,6 @@ struct QuantizerUniform: ScalarQuantizer {
         d(d), vmin(trained[0]), vdiff(trained[1]) {
     }
 
-
     virtual void encode_vector(const float *x, uint8_t *code) const
     {
         for (size_t i = 0; i < d; i++) {
@@ -301,6 +300,7 @@ struct QuantizerUniform8: QuantizerUniform<Codec> {
 
     QuantizerUniform8 (size_t d, const std::vector<float> &trained):
         QuantizerUniform<Codec> (d, trained) {}
+
 
     virtual float compute_distance_L2 (SimilarityL2 &sim, const uint8_t * codes) const
     { return compute_distance_8(*this, sim, codes); }
@@ -366,6 +366,12 @@ struct QuantizerNonUniform: ScalarQuantizer {
         return vmin[i] + xi * vdiff[i];
     }
 
+    __m256 reconstruct_8_components (const uint8_t * code, int i) const
+    {
+        __m256 xi = Codec::decode_8_components (code, i);
+        return _mm256_loadu_ps(vmin + i) + xi * _mm256_loadu_ps (vdiff + i);
+    }
+
     virtual float compute_distance_L2 (SimilarityL2 &sim, const uint8_t * codes) const
     { return compute_distance(*this, sim, codes); }
 
@@ -373,7 +379,24 @@ struct QuantizerNonUniform: ScalarQuantizer {
     { return compute_distance(*this, sim, codes); }
 };
 
-/************************** AVX-optimized version ************/
+
+template<class Codec>
+struct QuantizerNonUniform8: QuantizerNonUniform<Codec> {
+
+    QuantizerNonUniform8 (size_t d, const std::vector<float> &trained):
+        QuantizerNonUniform<Codec> (d, trained) {}
+
+    virtual float compute_distance_L2 (SimilarityL2 &sim, const uint8_t * codes) const
+    { return compute_distance_8(*this, sim, codes); }
+
+    virtual float compute_distance_IP (SimilarityIP &sim, const uint8_t * codes) const
+    { return compute_distance_8(*this, sim, codes); }
+
+};
+
+
+
+
 
 
 ScalarQuantizer *select_quantizer(
@@ -382,7 +405,10 @@ ScalarQuantizer *select_quantizer(
 {
     switch(qtype) {
     case IndexIVFScalarQuantizer::QT_8bit:
-        return new QuantizerNonUniform<Codec8bit>(d, trained);
+        if (d % 8 == 0)
+            return new QuantizerNonUniform8<Codec8bit>(d, trained);
+        else
+            return new QuantizerNonUniform<Codec8bit>(d, trained);
     case IndexIVFScalarQuantizer::QT_4bit:
         return new QuantizerNonUniform<Codec4bit>(d, trained);
     case IndexIVFScalarQuantizer::QT_8bit_uniform:
