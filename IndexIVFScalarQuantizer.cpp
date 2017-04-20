@@ -91,6 +91,7 @@ struct Codec4bit {
 
 struct SimilarityL2 {
     const float *y, *yi;
+
     float accu;
 
     SimilarityL2 (const float * y): y(y) {}
@@ -108,6 +109,32 @@ struct SimilarityL2 {
     float result () {
         return accu;
     }
+
+
+    __m256 accu8;
+
+    void begin_8 () {
+        accu8 = _mm256_setzero_ps();
+        yi = y;
+    }
+
+    void add_8_components (__m256 x) {
+        __m256 yiv = _mm256_loadu_ps (yi);
+        yi += 8;
+        __m256 tmp = yiv - x;
+        accu8 += tmp * tmp;
+    }
+
+    float result_8 () {
+        __m256 sum = _mm256_hadd_ps(accu8, accu8);
+        __m256 sum2 = _mm256_hadd_ps(sum, sum);
+        // now add the 0th and 4th component
+        return
+            _mm_cvtss_f32 (_mm256_castps256_ps128(sum2)) +
+            _mm_cvtss_f32 (_mm256_extractf128_ps(sum2, 1));
+    }
+
+
 
 };
 
@@ -146,6 +173,17 @@ float compute_distance(const Quantizer & quant, Similarity & sim, const uint8_t 
     return sim.result();
 }
 
+template<class Quantizer, class Similarity>
+float compute_distance_8(const Quantizer & quant, Similarity & sim, const uint8_t *code)
+{
+    sim.begin_8();
+    for (size_t i = 0; i < quant.d; i += 8) {
+        __m256 xi = quant.reconstruct_8_components (code, i);
+        sim.add_8_components (xi);
+    }
+    return sim.result_8();
+}
+
 
 
 /*******************************************************************
@@ -182,9 +220,11 @@ void train_Uniform(idx_t n, int d, const float *x, std::vector<float> & trained)
 template<class Codec>
 struct QuantizerUniform: ScalarQuantizer {
     const size_t d;
-    const float vmin, vmax;
+    const float vmin, vmax, vdiff;
+
     QuantizerUniform(size_t d, const std::vector<float> &trained):
-        d(d), vmin(trained[0]), vmax(trained[1]) {}
+        d(d), vmin(trained[0]), vmax(trained[1]), vdiff(vmax - vmin) {
+    }
 
 
     virtual void encode_vector(const float *x, uint8_t *code) const
@@ -208,7 +248,13 @@ struct QuantizerUniform: ScalarQuantizer {
     float reconstruct_component (const uint8_t * code, int i) const
     {
         float xi = Codec::decode_component (code, i);
-        return vmin + xi * (vmax - vmin);
+        return vmin + xi * vdiff;
+    }
+
+    __m256 reconstruct_8_components (const uint8_t * code, int i) const
+    {
+        __m256 xi = Codec::decode_8_components (code, i);
+        return _mm256_set1_ps(vmin) + xi * _mm256_set1_ps (vdiff);
     }
 
     virtual float compute_distance_L2 (SimilarityL2 &sim, const uint8_t * codes) const
@@ -217,6 +263,20 @@ struct QuantizerUniform: ScalarQuantizer {
     virtual float compute_distance_IP (SimilarityIP &sim, const uint8_t * codes) const
     { return compute_distance(*this, sim, codes); }
 };
+
+
+template<class Codec>
+struct QuantizerUniform8: QuantizerUniform<Codec> {
+
+    QuantizerUniform8 (size_t d, const std::vector<float> &trained):
+        QuantizerUniform<Codec> (d, trained) {}
+
+    virtual float compute_distance_L2 (SimilarityL2 &sim, const uint8_t * codes) const
+    { return compute_distance_8(*this, sim, codes); }
+
+};
+
+
 
 
 void train_NonUniform(idx_t n, int d, const float *x, std::vector<float> & trained)
@@ -275,7 +335,6 @@ struct QuantizerNonUniform: ScalarQuantizer {
     { return compute_distance(*this, sim, codes); }
 };
 
-
 /************************** AVX-optimized version ************/
 
 
@@ -285,7 +344,6 @@ ScalarQuantizer *select_quantizer(
 {
     switch(qtype) {
     case IndexIVFScalarQuantizer::QT_8bit:
-
         return new QuantizerNonUniform<Codec8bit>(d, trained);
     case IndexIVFScalarQuantizer::QT_4bit:
         return new QuantizerNonUniform<Codec4bit>(d, trained);
