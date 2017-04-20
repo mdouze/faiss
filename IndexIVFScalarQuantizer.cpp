@@ -81,6 +81,27 @@ struct Codec4bit {
         return (((code[i / 2] >> ((i & 1) << 2)) & 0xf) + 0.5f) / 15.0f;
     }
 
+
+    static __m256 decode_8_components (const uint8_t *code, int i) {
+        uint32_t c4 = *(uint32_t*)(code + (i >> 1));
+        uint32_t mask = 0x0f0f0f0f;
+        uint32_t c4ev = c4 & mask;
+        uint32_t c4od = (c4 >> 4) & mask;
+
+        // the 8 lower bytes of c8 contain the values
+        __m128i c8 = _mm_unpacklo_epi8 (_mm_set1_epi32(c4ev),
+                                        _mm_set1_epi32(c4od));
+        __m128i c4lo = _mm_cvtepu8_epi32 (c8);
+        __m128i c4hi = _mm_cvtepu8_epi32 (_mm_srli_si128(c8, 4));
+        __m256i i8 = _mm256_castsi128_si256 (c4lo);
+        i8 = _mm256_insertf128_si256 (i8, c4hi, 1);
+        __m256 f8 = _mm256_cvtepi32_ps (i8);
+        __m256 half = _mm256_set1_ps (0.5f);
+        f8 += half;
+        __m256 one_255 = _mm256_set1_ps (1.f / 15.f);
+        return f8 * one_255;
+    }
+
 };
 
 
@@ -403,21 +424,28 @@ ScalarQuantizer *select_quantizer(
        IndexIVFScalarQuantizer::QuantizerType qtype,
        size_t d, const std::vector<float> & trained)
 {
-    switch(qtype) {
-    case IndexIVFScalarQuantizer::QT_8bit:
-        if (d % 8 == 0)
+    if (d % 8 == 0) {
+        switch(qtype) {
+        case IndexIVFScalarQuantizer::QT_8bit:
             return new QuantizerNonUniform8<Codec8bit>(d, trained);
-        else
-            return new QuantizerNonUniform<Codec8bit>(d, trained);
-    case IndexIVFScalarQuantizer::QT_4bit:
-        return new QuantizerNonUniform<Codec4bit>(d, trained);
-    case IndexIVFScalarQuantizer::QT_8bit_uniform:
-        if (d % 8 == 0)
+        case IndexIVFScalarQuantizer::QT_4bit:
+            return new QuantizerNonUniform8<Codec4bit>(d, trained);
+        case IndexIVFScalarQuantizer::QT_8bit_uniform:
             return new QuantizerUniform8<Codec8bit>(d, trained);
-        else
+        case IndexIVFScalarQuantizer::QT_4bit_uniform:
+            return new QuantizerUniform8<Codec4bit>(d, trained);
+        }
+    } else {
+        switch(qtype) {
+        case IndexIVFScalarQuantizer::QT_8bit:
+            return new QuantizerNonUniform<Codec8bit>(d, trained);
+        case IndexIVFScalarQuantizer::QT_4bit:
+            return new QuantizerNonUniform<Codec4bit>(d, trained);
+        case IndexIVFScalarQuantizer::QT_8bit_uniform:
             return new QuantizerUniform<Codec8bit>(d, trained);
-    case IndexIVFScalarQuantizer::QT_4bit_uniform:
-        return new QuantizerUniform<Codec4bit>(d, trained);
+        case IndexIVFScalarQuantizer::QT_4bit_uniform:
+            return new QuantizerUniform<Codec4bit>(d, trained);
+        }
     }
     FAISS_ASSERT(!"should not happen");
     return nullptr;
@@ -609,7 +637,7 @@ void IndexIVFScalarQuantizer::merge_from_residuals (IndexIVF &other) {
     FAISS_ASSERT(!"not implemented");
 }
 
-    void test_avx () {
+    void test_avx_X () {
         uint8_t code[8] = {12, 13, 14, 15, 16, 17, 18, 19};
         __m256 vec = Codec8bit::decode_8_components(code, 0);
         float vf[8];
@@ -619,5 +647,18 @@ void IndexIVFScalarQuantizer::merge_from_residuals (IndexIVF &other) {
         printf("]\n");
     }
 
+    void test_avx () {
+        uint8_t code[4] = {0, 0, 0, 0};
+        for (int i = 0; i < 8; i++) {
+            float xi = (i + 3) / 15.0;
+            Codec4bit::encode_component(xi, code, i);
+        }
+        __m256 vec = Codec4bit::decode_8_components(code, 0);
+        float vf[8];
+        _mm256_storeu_ps(vf, vec);
+        printf("vec=[");
+        for(int i= 0; i < 8; i++) printf("%g ", vf[i] * 15.0);
+        printf("]\n");
+    }
 
 }
