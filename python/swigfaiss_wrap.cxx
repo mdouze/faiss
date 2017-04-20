@@ -28832,6 +28832,110 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_IndexIVFScalarQuantizer_rangestat_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  faiss::IndexIVFScalarQuantizer *arg1 = (faiss::IndexIVFScalarQuantizer *) 0 ;
+  faiss::IndexIVFScalarQuantizer::RangeStat arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IndexIVFScalarQuantizer_rangestat_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_faiss__IndexIVFScalarQuantizer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IndexIVFScalarQuantizer_rangestat_set" "', argument " "1"" of type '" "faiss::IndexIVFScalarQuantizer *""'"); 
+  }
+  arg1 = reinterpret_cast< faiss::IndexIVFScalarQuantizer * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IndexIVFScalarQuantizer_rangestat_set" "', argument " "2"" of type '" "faiss::IndexIVFScalarQuantizer::RangeStat""'");
+  } 
+  arg2 = static_cast< faiss::IndexIVFScalarQuantizer::RangeStat >(val2);
+  if (arg1) (arg1)->rangestat = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IndexIVFScalarQuantizer_rangestat_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  faiss::IndexIVFScalarQuantizer *arg1 = (faiss::IndexIVFScalarQuantizer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  faiss::IndexIVFScalarQuantizer::RangeStat result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IndexIVFScalarQuantizer_rangestat_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_faiss__IndexIVFScalarQuantizer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IndexIVFScalarQuantizer_rangestat_get" "', argument " "1"" of type '" "faiss::IndexIVFScalarQuantizer *""'"); 
+  }
+  arg1 = reinterpret_cast< faiss::IndexIVFScalarQuantizer * >(argp1);
+  result = (faiss::IndexIVFScalarQuantizer::RangeStat) ((arg1)->rangestat);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IndexIVFScalarQuantizer_rangestat_arg_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  faiss::IndexIVFScalarQuantizer *arg1 = (faiss::IndexIVFScalarQuantizer *) 0 ;
+  float arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  float val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IndexIVFScalarQuantizer_rangestat_arg_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_faiss__IndexIVFScalarQuantizer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IndexIVFScalarQuantizer_rangestat_arg_set" "', argument " "1"" of type '" "faiss::IndexIVFScalarQuantizer *""'"); 
+  }
+  arg1 = reinterpret_cast< faiss::IndexIVFScalarQuantizer * >(argp1);
+  ecode2 = SWIG_AsVal_float(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IndexIVFScalarQuantizer_rangestat_arg_set" "', argument " "2"" of type '" "float""'");
+  } 
+  arg2 = static_cast< float >(val2);
+  if (arg1) (arg1)->rangestat_arg = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IndexIVFScalarQuantizer_rangestat_arg_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  faiss::IndexIVFScalarQuantizer *arg1 = (faiss::IndexIVFScalarQuantizer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  float result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IndexIVFScalarQuantizer_rangestat_arg_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_faiss__IndexIVFScalarQuantizer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IndexIVFScalarQuantizer_rangestat_arg_get" "', argument " "1"" of type '" "faiss::IndexIVFScalarQuantizer *""'"); 
+  }
+  arg1 = reinterpret_cast< faiss::IndexIVFScalarQuantizer * >(argp1);
+  result = (float) ((arg1)->rangestat_arg);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_IndexIVFScalarQuantizer_code_size_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   faiss::IndexIVFScalarQuantizer *arg1 = (faiss::IndexIVFScalarQuantizer *) 0 ;
@@ -28988,13 +29092,13 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_IndexIVFScalarQuantizer(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_IndexIVFScalarQuantizer__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   faiss::Index *arg1 = (faiss::Index *) 0 ;
   size_t arg2 ;
   size_t arg3 ;
-  faiss::MetricType arg4 ;
-  faiss::IndexIVFScalarQuantizer::QuantizerType arg5 ;
+  faiss::IndexIVFScalarQuantizer::QuantizerType arg4 ;
+  faiss::MetricType arg5 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   size_t val2 ;
@@ -29030,14 +29134,14 @@ SWIGINTERN PyObject *_wrap_new_IndexIVFScalarQuantizer(PyObject *SWIGUNUSEDPARM(
   arg3 = static_cast< size_t >(val3);
   ecode4 = SWIG_AsVal_int(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_IndexIVFScalarQuantizer" "', argument " "4"" of type '" "faiss::MetricType""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_IndexIVFScalarQuantizer" "', argument " "4"" of type '" "faiss::IndexIVFScalarQuantizer::QuantizerType""'");
   } 
-  arg4 = static_cast< faiss::MetricType >(val4);
+  arg4 = static_cast< faiss::IndexIVFScalarQuantizer::QuantizerType >(val4);
   ecode5 = SWIG_AsVal_int(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_IndexIVFScalarQuantizer" "', argument " "5"" of type '" "faiss::IndexIVFScalarQuantizer::QuantizerType""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_IndexIVFScalarQuantizer" "', argument " "5"" of type '" "faiss::MetricType""'");
   } 
-  arg5 = static_cast< faiss::IndexIVFScalarQuantizer::QuantizerType >(val5);
+  arg5 = static_cast< faiss::MetricType >(val5);
   {
     Py_BEGIN_ALLOW_THREADS
     result = (faiss::IndexIVFScalarQuantizer *)new faiss::IndexIVFScalarQuantizer(arg1,arg2,arg3,arg4,arg5);
@@ -29047,6 +29151,139 @@ SWIGINTERN PyObject *_wrap_new_IndexIVFScalarQuantizer(PyObject *SWIGUNUSEDPARM(
   return resultobj;
 fail:
   return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_IndexIVFScalarQuantizer__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  faiss::Index *arg1 = (faiss::Index *) 0 ;
+  size_t arg2 ;
+  size_t arg3 ;
+  faiss::IndexIVFScalarQuantizer::QuantizerType arg4 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  size_t val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  faiss::IndexIVFScalarQuantizer *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:new_IndexIVFScalarQuantizer",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_faiss__Index, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_IndexIVFScalarQuantizer" "', argument " "1"" of type '" "faiss::Index *""'"); 
+  }
+  arg1 = reinterpret_cast< faiss::Index * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_IndexIVFScalarQuantizer" "', argument " "2"" of type '" "size_t""'");
+  } 
+  arg2 = static_cast< size_t >(val2);
+  ecode3 = SWIG_AsVal_size_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_IndexIVFScalarQuantizer" "', argument " "3"" of type '" "size_t""'");
+  } 
+  arg3 = static_cast< size_t >(val3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_IndexIVFScalarQuantizer" "', argument " "4"" of type '" "faiss::IndexIVFScalarQuantizer::QuantizerType""'");
+  } 
+  arg4 = static_cast< faiss::IndexIVFScalarQuantizer::QuantizerType >(val4);
+  {
+    Py_BEGIN_ALLOW_THREADS
+    result = (faiss::IndexIVFScalarQuantizer *)new faiss::IndexIVFScalarQuantizer(arg1,arg2,arg3,arg4);
+    Py_END_ALLOW_THREADS
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_faiss__IndexIVFScalarQuantizer, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_IndexIVFScalarQuantizer(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[6];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? (int)PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 5) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 4) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_faiss__Index, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_size_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_size_t(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_new_IndexIVFScalarQuantizer__SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 5) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_faiss__Index, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_size_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_size_t(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            {
+              int res = SWIG_AsVal_int(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              return _wrap_new_IndexIVFScalarQuantizer__SWIG_0(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_IndexIVFScalarQuantizer'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    faiss::IndexIVFScalarQuantizer::IndexIVFScalarQuantizer(faiss::Index *,size_t,size_t,faiss::IndexIVFScalarQuantizer::QuantizerType,faiss::MetricType)\n"
+    "    faiss::IndexIVFScalarQuantizer::IndexIVFScalarQuantizer(faiss::Index *,size_t,size_t,faiss::IndexIVFScalarQuantizer::QuantizerType)\n");
+  return 0;
 }
 
 
@@ -46925,6 +47162,10 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"IndexIVFFlatIPBounds_swigregister", IndexIVFFlatIPBounds_swigregister, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFScalarQuantizer_qtype_set", _wrap_IndexIVFScalarQuantizer_qtype_set, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFScalarQuantizer_qtype_get", _wrap_IndexIVFScalarQuantizer_qtype_get, METH_VARARGS, NULL},
+	 { (char *)"IndexIVFScalarQuantizer_rangestat_set", _wrap_IndexIVFScalarQuantizer_rangestat_set, METH_VARARGS, NULL},
+	 { (char *)"IndexIVFScalarQuantizer_rangestat_get", _wrap_IndexIVFScalarQuantizer_rangestat_get, METH_VARARGS, NULL},
+	 { (char *)"IndexIVFScalarQuantizer_rangestat_arg_set", _wrap_IndexIVFScalarQuantizer_rangestat_arg_set, METH_VARARGS, NULL},
+	 { (char *)"IndexIVFScalarQuantizer_rangestat_arg_get", _wrap_IndexIVFScalarQuantizer_rangestat_arg_get, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFScalarQuantizer_code_size_set", _wrap_IndexIVFScalarQuantizer_code_size_set, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFScalarQuantizer_code_size_get", _wrap_IndexIVFScalarQuantizer_code_size_get, METH_VARARGS, NULL},
 	 { (char *)"IndexIVFScalarQuantizer_trained_set", _wrap_IndexIVFScalarQuantizer_trained_set, METH_VARARGS, NULL},
@@ -48643,6 +48884,9 @@ SWIG_init(void) {
   SWIG_Python_SetConstant(d, "IndexIVFScalarQuantizer_QT_4bit",SWIG_From_int(static_cast< int >(faiss::IndexIVFScalarQuantizer::QT_4bit)));
   SWIG_Python_SetConstant(d, "IndexIVFScalarQuantizer_QT_8bit_uniform",SWIG_From_int(static_cast< int >(faiss::IndexIVFScalarQuantizer::QT_8bit_uniform)));
   SWIG_Python_SetConstant(d, "IndexIVFScalarQuantizer_QT_4bit_uniform",SWIG_From_int(static_cast< int >(faiss::IndexIVFScalarQuantizer::QT_4bit_uniform)));
+  SWIG_Python_SetConstant(d, "IndexIVFScalarQuantizer_RS_minmax",SWIG_From_int(static_cast< int >(faiss::IndexIVFScalarQuantizer::RS_minmax)));
+  SWIG_Python_SetConstant(d, "IndexIVFScalarQuantizer_RS_meanstd",SWIG_From_int(static_cast< int >(faiss::IndexIVFScalarQuantizer::RS_meanstd)));
+  SWIG_Python_SetConstant(d, "IndexIVFScalarQuantizer_RS_quantiles",SWIG_From_int(static_cast< int >(faiss::IndexIVFScalarQuantizer::RS_quantiles)));
   SWIG_addvarlink(SWIG_globals(),(char*)"indexIVFPQ_stats",Swig_var_indexIVFPQ_stats_get, Swig_var_indexIVFPQ_stats_set);
   SWIG_Python_SetConstant(d, "IndexIVFPQCompact_Alloc_type_none",SWIG_From_int(static_cast< int >(faiss::IndexIVFPQCompact::Alloc_type_none)));
   SWIG_Python_SetConstant(d, "IndexIVFPQCompact_Alloc_type_new",SWIG_From_int(static_cast< int >(faiss::IndexIVFPQCompact::Alloc_type_new)));

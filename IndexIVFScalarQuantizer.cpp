@@ -1,6 +1,8 @@
 #include "IndexIVFScalarQuantizer.h"
 
 #include <cstdio>
+#include <algorithm>
+
 #include <omp.h>
 
 #include <immintrin.h>
@@ -20,8 +22,9 @@ namespace faiss {
 
 IndexIVFScalarQuantizer::IndexIVFScalarQuantizer
           (Index *quantizer, size_t d, size_t nlist,
-           MetricType metric, QuantizerType qtype):
-    IndexIVF (quantizer, d, nlist, metric), qtype (qtype)
+           QuantizerType qtype, MetricType metric):
+              IndexIVF (quantizer, d, nlist, metric), qtype (qtype),
+              rangestat(RS_minmax), rangestat_arg(0)
 {
     switch (qtype) {
     case QT_8bit: case QT_8bit_uniform:
@@ -32,12 +35,14 @@ IndexIVFScalarQuantizer::IndexIVFScalarQuantizer
         break;
     }
     codes.resize(nlist);
+
 }
 
 namespace {
 
 typedef Index::idx_t idx_t;
 typedef IndexIVFScalarQuantizer::QuantizerType QuantizerType;
+typedef IndexIVFScalarQuantizer::RangeStat RangeStat;
 
 
 /*******************************************************************
@@ -238,6 +243,97 @@ float compute_distance_8(const Quantizer & quant, Similarity & sim, const uint8_
 
 
 /*******************************************************************
+ * Quantizer range training
+ */
+
+
+
+
+void train_Uniform(RangeStat rs, float rs_arg,
+                   idx_t n, const float *x,
+                   std::vector<float> & trained)
+{
+    trained.resize (2);
+    float & vmin = trained[0];
+    float & vmax = trained[1];
+
+    if (rs == IndexIVFScalarQuantizer::RS_minmax) {
+        vmin = HUGE_VAL; vmax = -HUGE_VAL;
+        for (size_t i = 0; i < n; i++) {
+            if (x[i] < vmin) vmin = x[i];
+            if (x[i] > vmax) vmax = x[i];
+        }
+    } else if (rs == IndexIVFScalarQuantizer::RS_meanstd) {
+        double sum = 0, sum2 = 0;
+        for (size_t i = 0; i < n; i++) {
+            sum += x[i];
+            sum2 += x[i] * x[i];
+        }
+        float mean = sum / n;
+        float var = sum2 / n - mean * mean;
+        float std = var <= 0 ? 1.0 : sqrt(var);
+
+        vmin = mean - std * rs_arg ;
+        vmax = mean - std * rs_arg ;
+    } else if (rs == IndexIVFScalarQuantizer::RS_quantiles) {
+        std::vector<float> x_copy(n);
+        memcpy(x_copy.data(), x, n * sizeof(*x));
+        // TODO just do a qucikselect
+        std::sort(x_copy.begin(), x_copy.end());
+        size_t o = int(rs_arg * n);
+        if (o < 0) o = 0;
+        if (o > n - o) o = n / 2;
+        vmin = x_copy[o];
+        vmax = x_copy[n - 1 - o];
+    } else {
+        FAISS_ASSERT(false);
+    }
+    vmax -= vmin;
+}
+
+void train_NonUniform(RangeStat rs, float rs_arg,
+                      idx_t n, int d, const float *x,
+                      std::vector<float> & trained)
+{
+    trained.resize (2 * d);
+    float * vmin = trained.data();
+    float * vmax = trained.data() + d;
+    if (rs == IndexIVFScalarQuantizer::RS_minmax) {
+        memcpy (vmin, x, sizeof(*x) * d);
+        memcpy (vmax, x, sizeof(*x) * d);
+        for (size_t i = 1; i < n; i++) {
+            const float *xi = x + i * d;
+            for (size_t j = 0; j < d; j++) {
+                if (xi[j] < vmin[j]) vmin[j] = xi[j];
+                if (xi[j] > vmax[j]) vmax[j] = xi[j];
+            }
+        }
+        float *vdiff = vmax;
+        for (size_t j = 0; j < d; j++) {
+            vdiff [j] = vmax[j] - vmin[j];
+        }
+    } else {
+        // transpose
+        std::vector<float> xt(n * d);
+        for (size_t i = 1; i < n; i++) {
+            const float *xi = x + i * d;
+            for (size_t j = 0; j < d; j++) {
+                xt[j * n + i] = xi[j];
+            }
+        }
+        std::vector<float> trained_d(2);
+        for (size_t j = 0; j < d; j++) {
+            train_Uniform(rs, rs_arg,
+                          n, xt.data() + j * n,
+                          trained_d);
+            vmin[j] = trained_d[0];
+            vmax[j] = trained_d[1];
+        }
+    }
+}
+
+
+/*******************************************************************
  * Quantizer: normalizes scalar vector components, then passes them through a codec
  */
 
@@ -254,19 +350,6 @@ struct ScalarQuantizer {
 };
 
 
-
-void train_Uniform(idx_t n, int d, const float *x, std::vector<float> & trained)
-{
-    trained.resize (2);
-    float & vmin = trained[0];
-    float & vmax = trained[1];
-    vmin = HUGE_VAL; vmax = -HUGE_VAL;
-    for (size_t i = 0; i < n * d; i++) {
-        if (x[i] < vmin) vmin = x[i];
-        if (x[i] > vmax) vmax = x[i];
-    }
-    vmax -= vmin;
-}
 
 
 template<class Codec>
@@ -334,25 +417,6 @@ struct QuantizerUniform8: QuantizerUniform<Codec> {
 
 
 
-void train_NonUniform(idx_t n, int d, const float *x, std::vector<float> & trained)
-{
-    trained.resize (2 * d);
-    float * vmin = trained.data();
-    float * vmax = trained.data() + d;
-    memcpy (vmin, x, sizeof(*x) * d);
-    memcpy (vmax, x, sizeof(*x) * d);
-    for (size_t i = 1; i < n; i++) {
-        const float *xi = x + i * d;
-            for (size_t j = 0; j < d; j++) {
-                if (xi[j] < vmin[j]) vmin[j] = xi[j];
-                if (xi[j] > vmax[j]) vmax[j] = xi[j];
-            }
-    }
-    float *vdiff = vmax;
-    for (size_t j = 0; j < d; j++) {
-        vdiff [j] = vmax[j] - vmin[j];
-    }
-}
 
 
 template<class Codec>
@@ -470,10 +534,10 @@ void IndexIVFScalarQuantizer::train_residual (idx_t n, const float *x)
 
     switch (qtype) {
     case QT_4bit_uniform: case QT_8bit_uniform:
-        train_Uniform (n, d, residuals, trained);
+        train_Uniform (rangestat, rangestat_arg, n * d, residuals, trained);
         break;
     case QT_4bit: case QT_8bit:
-        train_NonUniform (n, d, residuals, trained);
+        train_NonUniform (rangestat, rangestat_arg, n, d, residuals, trained);
         break;
     }
 

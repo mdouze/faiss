@@ -1746,6 +1746,15 @@ class IndexIVFScalarQuantizer(IndexIVF):
     __swig_setmethods__["qtype"] = _swigfaiss.IndexIVFScalarQuantizer_qtype_set
     __swig_getmethods__["qtype"] = _swigfaiss.IndexIVFScalarQuantizer_qtype_get
     if _newclass:qtype = _swig_property(_swigfaiss.IndexIVFScalarQuantizer_qtype_get, _swigfaiss.IndexIVFScalarQuantizer_qtype_set)
+    RS_minmax = _swigfaiss.IndexIVFScalarQuantizer_RS_minmax
+    RS_meanstd = _swigfaiss.IndexIVFScalarQuantizer_RS_meanstd
+    RS_quantiles = _swigfaiss.IndexIVFScalarQuantizer_RS_quantiles
+    __swig_setmethods__["rangestat"] = _swigfaiss.IndexIVFScalarQuantizer_rangestat_set
+    __swig_getmethods__["rangestat"] = _swigfaiss.IndexIVFScalarQuantizer_rangestat_get
+    if _newclass:rangestat = _swig_property(_swigfaiss.IndexIVFScalarQuantizer_rangestat_get, _swigfaiss.IndexIVFScalarQuantizer_rangestat_set)
+    __swig_setmethods__["rangestat_arg"] = _swigfaiss.IndexIVFScalarQuantizer_rangestat_arg_set
+    __swig_getmethods__["rangestat_arg"] = _swigfaiss.IndexIVFScalarQuantizer_rangestat_arg_get
+    if _newclass:rangestat_arg = _swig_property(_swigfaiss.IndexIVFScalarQuantizer_rangestat_arg_get, _swigfaiss.IndexIVFScalarQuantizer_rangestat_arg_set)
     __swig_setmethods__["code_size"] = _swigfaiss.IndexIVFScalarQuantizer_code_size_set
     __swig_getmethods__["code_size"] = _swigfaiss.IndexIVFScalarQuantizer_code_size_get
     if _newclass:code_size = _swig_property(_swigfaiss.IndexIVFScalarQuantizer_code_size_get, _swigfaiss.IndexIVFScalarQuantizer_code_size_set)
