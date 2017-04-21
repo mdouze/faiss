@@ -13,30 +13,22 @@
 
 namespace faiss {
 
-
-
-
 /*******************************************************************
  * IndexIVFScalarQuantizer implementation
+ *
+ * The main source of complexity is to support combinations of 4
+ * variants without incurring runtime tests or virtual function calls:
+ *
+ * - 4 / 8 bits per code component
+ * - uniform / non-uniform
+ * - IP / L2 distance search
+ * - scalar / AVX distance computation
+ *
+ * The appropriate Quantizer object is returned via select_quantizer
+ * that hides the template mess.
  ********************************************************************/
 
-IndexIVFScalarQuantizer::IndexIVFScalarQuantizer
-          (Index *quantizer, size_t d, size_t nlist,
-           QuantizerType qtype, MetricType metric):
-              IndexIVF (quantizer, d, nlist, metric), qtype (qtype),
-              rangestat(RS_minmax), rangestat_arg(0)
-{
-    switch (qtype) {
-    case QT_8bit: case QT_8bit_uniform:
-        code_size = d;
-        break;
-    case QT_4bit: case QT_4bit_uniform:
-        code_size = (d + 1) / 2;
-        break;
-    }
-    codes.resize(nlist);
 
-}
 
 namespace {
 
@@ -46,7 +38,9 @@ typedef IndexIVFScalarQuantizer::RangeStat RangeStat;
 
 
 /*******************************************************************
- * Codec: takes value in [0, 1], outputs codes
+ * Codec: converts between values in [0, 1] and an index in a code
+ * array. The "i" parameter is the vector component index (not byte
+ * index).
  */
 
 struct Codec8bit {
@@ -163,8 +157,6 @@ struct SimilarityL2 {
             _mm_cvtss_f32 (_mm256_extractf128_ps(sum2, 1));
     }
 
-
-
 };
 
 struct SimilarityIP {
@@ -218,6 +210,11 @@ struct SimilarityIP {
 };
 
 
+/*******************************************************************
+ * templatized distance functions
+ */
+
+
 template<class Quantizer, class Similarity>
 float compute_distance(const Quantizer & quant, Similarity & sim, const uint8_t *code)
 {
@@ -263,6 +260,9 @@ void train_Uniform(RangeStat rs, float rs_arg,
             if (x[i] < vmin) vmin = x[i];
             if (x[i] > vmax) vmax = x[i];
         }
+        float vexp = (vmax - vmin) * rs_arg;
+        vmin -= vexp;
+        vmax += vexp;
     } else if (rs == IndexIVFScalarQuantizer::RS_meanstd) {
         double sum = 0, sum2 = 0;
         for (size_t i = 0; i < n; i++) {
@@ -274,7 +274,7 @@ void train_Uniform(RangeStat rs, float rs_arg,
         float std = var <= 0 ? 1.0 : sqrt(var);
 
         vmin = mean - std * rs_arg ;
-        vmax = mean - std * rs_arg ;
+        vmax = mean + std * rs_arg ;
     } else if (rs == IndexIVFScalarQuantizer::RS_quantiles) {
         std::vector<float> x_copy(n);
         memcpy(x_copy.data(), x, n * sizeof(*x));
@@ -310,6 +310,9 @@ void train_NonUniform(RangeStat rs, float rs_arg,
         }
         float *vdiff = vmax;
         for (size_t j = 0; j < d; j++) {
+            float vexp = (vmax[j] - vmin[j]) * rs_arg;
+            vmin[j] -= vexp;
+            vmax[j] += vexp;
             vdiff [j] = vmax[j] - vmin[j];
         }
     } else {
@@ -518,9 +521,28 @@ ScalarQuantizer *select_quantizer(
 
 } // anonymous namespace
 
+
+
 /*******************************************************************
- * Implementation of the IndexIVFScalarQuantizer
- */
+ * IndexIVFScalarQuantizer implementation
+ ********************************************************************/
+
+IndexIVFScalarQuantizer::IndexIVFScalarQuantizer
+          (Index *quantizer, size_t d, size_t nlist,
+           QuantizerType qtype, MetricType metric):
+              IndexIVF (quantizer, d, nlist, metric), qtype (qtype),
+              rangestat(RS_minmax), rangestat_arg(0)
+{
+    switch (qtype) {
+    case QT_8bit: case QT_8bit_uniform:
+        code_size = d;
+        break;
+    case QT_4bit: case QT_4bit_uniform:
+        code_size = (d + 1) / 2;
+        break;
+    }
+    codes.resize(nlist);
+}
 
 
 void IndexIVFScalarQuantizer::train_residual (idx_t n, const float *x)
@@ -528,6 +550,7 @@ void IndexIVFScalarQuantizer::train_residual (idx_t n, const float *x)
     long * idx = new long [n];
     quantizer->assign (n, x, idx);
     float *residuals = new float [n * d];
+
 #pragma omp parallel for
     for (idx_t i = 0; i < n; i++)
         quantizer->compute_residual (x + i * d, residuals + i * d, idx[i]);
