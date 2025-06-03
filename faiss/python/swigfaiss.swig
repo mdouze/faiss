@@ -88,6 +88,8 @@ typedef uint64_t size_t;
 #include <faiss/impl/mapped_io.h>
 #include <faiss/impl/zerocopy_io.h>
 
+#include <faiss/utils/simd_levels.h>
+
 #include <faiss/IndexFlat.h>
 #include <faiss/VectorTransform.h>
 #include <faiss/IndexPreTransform.h>
@@ -180,6 +182,8 @@ typedef uint64_t size_t;
 
 #include <faiss/utils/hamming.h>
 #include <faiss/utils/hamming_distance/common.h>
+
+
 
 #include <faiss/AutoTune.h>
 #include <faiss/MatrixStats.h>
@@ -323,6 +327,9 @@ namespace std {
 %include <faiss/utils/partitioning.h>
 %include <faiss/utils/hamming.h>
 %include <faiss/utils/hamming_distance/common.h>
+
+%ignore faiss::SIMDConfig::level_names;
+%include <faiss/utils/simd_levels.h>
 
 int get_num_gpus();
 void gpu_profiler_start();
