@@ -7,9 +7,12 @@
 
 #include <faiss/utils/distances.h>
 
+#ifdef COMPILE_SIMD_AVX2
+
 #include <immintrin.h>
 
-#ifdef COMPILE_SIMD_AVX2
+#define AUTOVEC_LEVEL SIMDLevel::AVX2
+#include <faiss/utils/simd_impl/distances_autovec-inl.h>
 
 namespace faiss {
 
