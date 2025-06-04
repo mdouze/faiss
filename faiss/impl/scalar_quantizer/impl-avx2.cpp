@@ -5,6 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <faiss/utils/simd_levels.h>
+
+#ifdef COMPILE_SIMD_AVX2
+
 #include <faiss/impl/FaissAssert.h>
 #include <faiss/impl/scalar_quantizer/codecs.h>
 #include <faiss/impl/scalar_quantizer/distance_computers.h>
@@ -429,3 +433,5 @@ template InvertedListScanner* sel0_InvertedListScanner<SIMDLevel::AVX2>(
 } // namespace scalar_quantizer
 
 } // namespace faiss
+
+#endif // COMPILE_SIMD_AVX2
