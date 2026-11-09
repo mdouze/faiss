@@ -7,7 +7,7 @@
 
     python demo_deep10m.py
 
-Requires the software and curl command in README_paper.md, which downloads
+Requires the software and curl command in README.md, which downloads
 the first 10,010,000 rows to /tmp/base.1B.fbin.part.
 Uses the paper's timing and test split, with float32 scoring;
 starting rows are sampled without replacement with a seeded NumPy generator.
