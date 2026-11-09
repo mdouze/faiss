@@ -1,4 +1,4 @@
-# Reproducing the e-means paper: Table 3, Figure 4(b) and Figure 3
+# Reproducing the e-means paper: Table 3, Figure 4(b), Figure 3 and large-scale experiments
 
 The `paper_*` files in this folder re-measure the timed results of the e-means paper with the
 e-means that ships in faiss (`faiss.contrib.e_means`), against the baseline the paper used for
@@ -281,13 +281,10 @@ long part: 100 iterations alone took 30 minutes (DEEP*) to 57 minutes (SimSearch
 e-means arm took 4 to 46 minutes per dataset (10 seeds), and its Faiss arm about 2 minutes per
 seed at 1M rows and 50 at 10M on 32 CPU cores.
 
-## 9. Sharded e-means on DINO
+## 9. Large scale e-means DINO with approximate assignment
 
-These demos show sharded e-means training on the public DINO10B dataset in
+These demos show e-means training on the public DINO10B dataset in
 a scalable way.
-
-Most of the training code itself in the e_means contrib directory. The code here
-handles the data format and I/O to disk.
 
 The code is primarlily intended to run on a single multi-GPU machine.
 Every worker holds one contiguous centroid shard and an equal row contribution
@@ -363,7 +360,7 @@ python demo_training_from_ssd.py \
 ```
 The options are:
 
-- `--launch 4` means running on 4 GPUs. The command can also be launched with torchrun or slurm.
+- `--launch 4` means running on 4 GPUs. The command can also be launched with torchrun or slurm on multiple machines.
 
 - `--final-closing-mean` does a final pass to compute the final centroids.
 The alternative is to accumulate them during the last epoch, but this uses more GPU memory.
