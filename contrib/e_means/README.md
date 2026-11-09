@@ -4,7 +4,7 @@
 
 # e-means: outperforming k-means in one-tenth the epochs
 
-[arXiv](https://arxiv.org/abs/2611.09501) · Blog post link (soon) · [Browser demo](https://e-means.github.io/playground.html) · Reproduction scripts (link)
+[arXiv](https://arxiv.org/abs/2611.09501) · Blog post link (soon) · [Browser demo](https://e-means.github.io/playground.html) · Reproduction scripts ([`benchs/e_means`](https://github.com/facebookresearch/faiss/tree/main/benchs/e_means))
 
 Code contributors: Gergely Szilvasy, Swann Bessa, Matthijs Douze
 

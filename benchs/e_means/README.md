@@ -1,7 +1,7 @@
 # Reproducing the e-means paper
 
 e-means is a modern, robust replacement for k-means developed at Meta FAIR. e-means delivers a **~10× speedup in epochs and wall-clock** while achieving **lower loss** compared to Lloyd's k-means, with no additional hyperparameters. e-means uses a mini-batch update rule specialized for the k-means problem, based on exponential moving averages. More details can be found in [arXiv](https://arxiv.org/abs/2611.09501) [Browser demo](https://e-means.github.io/playground.html).
-The main implementation of e-means is in [`contrib/e_means`](https://github.com/swannbessa/faiss/tree/emeans-paper-bench/contrib/e_means), we refer to the documentation therein for an introduction to the API.
+The main implementation of e-means is in [`contrib/e_means`](https://github.com/facebookresearch/faiss/tree/main/contrib/e_means), we refer to the documentation therein for an introduction to the API.
 
 This document and code explains how to reproduce key results from the paper.
 
