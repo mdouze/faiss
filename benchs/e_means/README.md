@@ -1,19 +1,24 @@
-# Reproducing the e-means paper: Table 3, Figure 4(b), Figure 3 and large-scale experiments
+# Reproducing the e-means paper
 
-The `paper_*` files in this folder re-measure the timed results of the e-means paper with the
-e-means that ships in faiss (`faiss.contrib.e_means`), against the baseline the paper used for
-each result, with the paper's timing protocol. You choose how far to go (1M, 10M or 100M rows),
-download only the data that choice needs, and run one command per result.
+e-means is a modern, robust replacement for k-means developed at Meta FAIR. e-means delivers a **~10× speedup in epochs and wall-clock** while achieving **lower loss** compared to Lloyd's k-means, with no additional hyperparameters. e-means uses a mini-batch update rule specialized for the k-means problem, based on exponential moving averages. More details can be found in [arXiv](https://arxiv.org/abs/2611.09501) [Browser demo](https://e-means.github.io/playground.html).
+The main implementation of e-means is in [`contrib/e_means`](https://github.com/swannbessa/faiss/tree/emeans-paper-bench/contrib/e_means), we refer to the documentation therein for an introduction to the API.
 
-| Paper result | What it shows | Compared with | Scales |
-|---|---|---|---|
-| Table 3 | epochs e-means needs to reach Flash-KMeans' error after 25 iterations, and how much faster it gets there | Flash-KMeans 0.3.1 | 1M, 10M, 100M rows |
-| Figure 4(b) | test error against wall-clock time | Flash-KMeans 0.3.1 | 10M, 100M rows |
-| Figure 3 | training and test error against epochs (no timing) | Faiss k-means on the CPU | 1M, 10M rows |
+This document and code explains how to reproduce key results from the paper.
 
-**Not covered:** Table 3's 1B row and its DINOv3 cell at 100M rows (several GPUs, or more memory
-than one GPU holds), the Faiss-GPU and cuML curves of Figure 4(b), and the k-means++ Faiss, Sculley
-and Staleness-Reduction curves of Figure 3.
+If you use e-means for scientific work, please cite our paper using the following BibTeX entry:
+
+```bibtex
+@misc{bessa2026emeans,
+  title  = {{e-means}: outperforming {k-means} (in one-tenth the epochs)},
+  author = {Bessa, Swann and Mazar{\'e}, Pierre-Emmanuel and Szilvasy, Gergely and
+            Touvron, Hugo and Picard, David and Douze, Matthijs and J{\'e}gou, Herv{\'e}},
+  year   = {2026},
+  note   = {Preprint},
+  url    = {https://arxiv.org/abs/2611.09501}
+}
+```
+
+Code contributors: Gergely Szilvasy, Swann Bessa, Matthijs Douze
 
 ## 1. What you need
 
@@ -40,40 +45,6 @@ and Staleness-Reduction curves of Figure 3.
   measured with PyTorch 2.14 and Triton 3.8. Flash-KMeans is written in Triton, so its times can
   move by a few percent with the Triton version.
 
-## 2. Choose your scale and download the data
-
-Each scale includes the ones below it. Larger scales read a longer prefix of the large corpora,
-so **the download grows about fivefold per step**:
-
-| Choice | Download | Time at 25 MB/s (200 Mbit/s) | Time at 250 MB/s | Results you can reproduce |
-|---|---|---|---|---|
-| `--results 1M` | 4.5 GB | about 3 min | under a minute | Table 3, 1M row. Figure 3, DEEP* 1M and ImageNet-CLIP 1M |
-| `--results 10M` | 21.7 GB | about 14 min | about 1 min | the above, plus Table 3, 10M row. Figure 4(b), upper row. Figure 3, SPACEV 10M and SIFT 10M |
-| `--results 100M` | 100.8 GB | about 67 min | about 7 min | the above, plus Table 3, 100M row. Figure 4(b), lower row |
-
-```bash
-export EMEANS_DATA=/path/to/data           # where the files go
-export EMEANS_CACHE=/path/to/cache         # small files written by the scripts
-python paper_download.py --results 1M --dry-run   # prints the table above and the file list
-python paper_download.py --results 1M             # asks for confirmation, then downloads
-```
-
-Measured from our cluster (16 parallel requests, 270 to 400 MB/s): `--results 1M` took 82 s, moving up to `10M` 58 s more, and up to `100M` 305 s more.
-
-`paper_download.py` fetches only the bytes each result reads, with parallel HTTP range requests:
-a prefix of each corpus, and, for SPACEV and SimSearchNet++, the 20,000 held-out test rows, saved
-in a small `heldout_rows.npy` beside the corpus (they sit near the end of files of 140 and 256 GB,
-which therefore need not be downloaded). An interrupted download resumes where it stopped, and
-moving to a larger scale later only fetches what is missing. At the end it checks every dataset
-against fingerprints of the paper's own arrays and stops on any difference, so a wrong or corrupted
-file cannot produce plausible-looking numbers. Then build the Flash-KMeans copy the paper used on
-two corpora, once:
-
-```bash
-python paper_flash_matched.py
-```
-
-## 3. Run
 
 ### Minimal DEEP* 10M run, one seed
 
@@ -138,6 +109,59 @@ half a second on an H100. This is a better MSE than Lloyd's reference MSE of 0.3
 The script scores in float32 and uses different
 starting centroids from the paper, and runs in a single seed.
 Read on for the full runs.
+
+
+## 2. Reproducing Table 3, Figure 4(b) and Figure 3
+
+The `paper_*` files in this folder re-measure the timed results of the e-means paper with the
+e-means that ships in faiss (`faiss.contrib.e_means`), against the baseline the paper used for
+each result, with the paper's timing protocol. You choose how far to go (1M, 10M or 100M rows),
+download only the data that choice needs, and run one command per result.
+
+| Paper result | What it shows | Compared with | Scales |
+|---|---|---|---|
+| Table 3 | epochs e-means needs to reach Flash-KMeans' error after 25 iterations, and how much faster it gets there | Flash-KMeans 0.3.1 | 1M, 10M, 100M rows |
+| Figure 4(b) | test error against wall-clock time | Flash-KMeans 0.3.1 | 10M, 100M rows |
+| Figure 3 | training and test error against epochs (no timing) | Faiss k-means on the CPU | 1M, 10M rows |
+
+**Not covered:** Table 3's 1B row and its DINOv3 cell at 100M rows (several GPUs, or more memory
+than one GPU holds), the Faiss-GPU and cuML curves of Figure 4(b), and the k-means++ Faiss, Sculley
+and Staleness-Reduction curves of Figure 3.
+
+### Choose your scale and download the data
+
+Each scale includes the ones below it. Larger scales read a longer prefix of the large corpora,
+so **the download grows about fivefold per step**:
+
+| Choice | Download | Time at 25 MB/s (200 Mbit/s) | Time at 250 MB/s | Results you can reproduce |
+|---|---|---|---|---|
+| `--results 1M` | 4.5 GB | about 3 min | under a minute | Table 3, 1M row. Figure 3, DEEP* 1M and ImageNet-CLIP 1M |
+| `--results 10M` | 21.7 GB | about 14 min | about 1 min | the above, plus Table 3, 10M row. Figure 4(b), upper row. Figure 3, SPACEV 10M and SIFT 10M |
+| `--results 100M` | 100.8 GB | about 67 min | about 7 min | the above, plus Table 3, 100M row. Figure 4(b), lower row |
+
+```bash
+export EMEANS_DATA=/path/to/data           # where the files go
+export EMEANS_CACHE=/path/to/cache         # small files written by the scripts
+python paper_download.py --results 1M --dry-run   # prints the table above and the file list
+python paper_download.py --results 1M             # asks for confirmation, then downloads
+```
+
+Measured from our cluster (16 parallel requests, 270 to 400 MB/s): `--results 1M` took 82 s, moving up to `10M` 58 s more, and up to `100M` 305 s more.
+
+`paper_download.py` fetches only the bytes each result reads, with parallel HTTP range requests:
+a prefix of each corpus, and, for SPACEV and SimSearchNet++, the 20,000 held-out test rows, saved
+in a small `heldout_rows.npy` beside the corpus (they sit near the end of files of 140 and 256 GB,
+which therefore need not be downloaded). An interrupted download resumes where it stopped, and
+moving to a larger scale later only fetches what is missing. At the end it checks every dataset
+against fingerprints of the paper's own arrays and stops on any difference, so a wrong or corrupted
+file cannot produce plausible-looking numbers. Then build the Flash-KMeans copy the paper used on
+two corpora, once:
+
+```bash
+python paper_flash_matched.py
+```
+
+## 3. Run
 
 ### Full benchmark commands
 
