@@ -133,9 +133,11 @@ Test MSE (5,000 held-out vectors): 0.34197278
 ```
 
 </details>
-This example reaches the reference MSE of 0.3423. The optimization takes about
-half a second on an H100. The script scores in float32 and uses different
-starting centroids from the paper.
+This example reaches MSE=0.34197278 in about
+half a second on an H100. This is a better MSE than Lloyd's reference MSE of 0.3423.
+The script scores in float32 and uses different
+starting centroids from the paper, and runs in a single seed.
+Read on for the full runs.
 
 ### Full benchmark commands
 
