@@ -75,6 +75,70 @@ python paper_flash_matched.py
 
 ## 3. Run
 
+### Minimal DEEP* 10M run, one seed
+
+With the software above installed, download only the needed DEEP* prefix
+(3,843,840,008 bytes: an 8-byte header and 10,010,000 rows of 96 float32 values).
+The extra 10,000 rows supply the paper's evaluation split:
+
+```bash
+curl --fail --location --range 0-3843840007 \
+    --output /tmp/base.1B.fbin.part \
+    https://huggingface.co/datasets/suchun/deep1b-mirror/resolve/main/base.1B.fbin
+python demo_deep10m.py
+```
+
+The script [`demo_deep10m.py`](demo_deep10m.py) reads the `.fbin` header and
+memory-maps only this prefix with NumPy.
+
+This runs seed 123 with 65,536 clusters for 2 epochs (Table 3's reported
+DEEP* 10M budget),
+with the quality batch recipe, float32 input cast to bfloat16 per batch, CuTe
+assignment, and the paper's warm-up, timing and test split.
+For readability of this small test the starting centroids
+are sampled without replacement using a seeded NumPy generator, so their
+values differ from the paper's CUDA initialization, and it runs with a single seed.
+It prints training seconds and test MSE. Seed 10's paper Flash@25 test MSE is
+`0.3423`.
+
+
+Run the mini-test with
+```bash
+python demo_deep10m.py
+```
+
+The output should look similar to:
+<details>
+  <summary>Click to expand</summary>
+
+```
+Load data: /tmp/base.1B.fbin.part, 10,010,000 vectors of dimension 96, float32
+Loaded 10,000,000 x 96 training values onto NVIDIA H100 80GB HBM3: 3.84 GB in 1.55 s
+Sample test set: 5,000 x 96 from 10,000 evaluation rows, seed 1234
+Sample initialization: 65,536 x 96 from 10,000,000 training rows, seed 123
+E-means warm-up: n=10,000,000, d=96, k=65,536, epochs=2, seed=123, quality/CuTe/bfloat16
+Warm-up complete: 14.8146 s, batch=65,536, steps=306, alpha0=0.0705062, last-pass objective=3.38942e+06
+E-means run 1: n=10,000,000, d=96, k=65,536, epochs=2, seed=123, quality/CuTe/bfloat16
+Run 1 complete: 0.5188 s, batch=65,536, steps=306, alpha0=0.0705062, last-pass objective=3.38942e+06
+E-means run 2: n=10,000,000, d=96, k=65,536, epochs=2, seed=123, quality/CuTe/bfloat16
+Run 2 complete: 0.5198 s, batch=65,536, steps=306, alpha0=0.0705062, last-pass objective=3.38942e+06
+E-means run 3: n=10,000,000, d=96, k=65,536, epochs=2, seed=123, quality/CuTe/bfloat16
+Run 3 complete: 0.5191 s, batch=65,536, steps=306, alpha0=0.0705062, last-pass objective=3.38942e+06
+DEEP* 10M: 10,000,000 vectors, 65,536 clusters, 2 epochs, seed 123
+GPU: NVIDIA H100 80GB HBM3
+Input: float32, cast to bfloat16 per batch; CuTe assignment
+Training time: 0.5191 s
+Timed calls: 0.5188 s, 0.5198 s, 0.5191 s
+Test MSE (5,000 held-out vectors): 0.34197278
+```
+
+</details>
+This example reaches the reference MSE of 0.3423. The optimization takes about
+half a second on an H100. The script scores in float32 and uses different
+starting centroids from the paper.
+
+### Full benchmark commands
+
 One GPU per command. Every timed run is written once to its own JSON file under `--out` (default
 `./results`), named after everything that varies, so an interrupted command resumes and several
 commands can run in parallel on different GPUs (pass `--dataset` to split the work).
